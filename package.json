@@ -1,0 +1,28 @@
+{
+  "name": "track-that-employee",
+  "version": "1.0.0",
+  "description": "Command-line application to manage a company's employee database, using Node.js, Inquirer, and MySQL.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jset"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BGrowcott/track-that-employee.git"
+  },
+  "keywords": [],
+  "author": "Ben Growcott",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BGrowcott/track-that-employee/issues"
+  },
+  "homepage": "https://github.com/BGrowcott/track-that-employee#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "inquirer": "^8.2.1",
+    "mysql2": "^2.3.3"
+  },
+  "devDependencies": {
+    "jest": "^27.5.1"
+  }
+}
