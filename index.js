@@ -4,6 +4,7 @@ const chalk = require("chalk");
 const fs = require("fs");
 const path = require("path");
 const cTable = require("console.table");
+const { resolve } = require("path");
 
 // connecting to the database
 const db = mysql.createConnection(
@@ -118,7 +119,6 @@ function updateDepartmentTable(answer) {
 
 function updateRoleTable(answer) {
   const { roleName, salary, department } = answer;
-  console.log(idFromDepName(department));
   db.query(
     `INSERT INTO job_role (title, salary, department_id)
     VALUES ("${roleName}", "${salary}", "${idFromDepName(department)}")`,
@@ -140,14 +140,57 @@ function makeDepArray() {
   return departmentArray;
 }
 
-function idFromDepName(department) {
-  let depId;
-  db.query(
-    `SELECT id FROM department WHERE department_name = "${department}"`,
-    function (err, results) {
-      depId = results[0].id;
-      console.log(depId);
-    }
-  );
-  console.log(depId);
+// PROMISE PROBLEMS!!!
+
+async function test() {
+  try {
+  const id = await idFromDepName();
+  console.log(id)
+  return id
+  }
+  catch(error){console.log(error)}
 }
+
+async function idFromDepName() {
+  return new Promise((resolve, reject) => {
+    db.query(
+      `SELECT id FROM department WHERE department_name = "Sales"`,
+      function (err, results) {
+        if (err) return reject(err)
+        return resolve(results[0].id);
+      }
+    );
+  });
+}
+
+console.log(idFromDepName().then((id)=>{return id}))
+
+
+// function idFromDepName(department) {
+//   let depId;
+//   db.query(
+//     `SELECT id FROM department WHERE department_name = "${department}"`,
+//     function (err, results) {
+//       depId = results[0].id;
+//       console.log(depId);
+//     }
+//   );
+//   return depId
+// }
+
+// // let depId;
+// async function idFromDepName(department) {
+//   return new Promise((resolve) => {
+//       db.promise().query(`SELECT id FROM department WHERE department_name = "${department}"`, (err, results)=>{
+//       resolve(results[0])
+//     });
+//   });
+// }
+
+// console.log(idFromDepName("Sales"));
+// // db.promise()
+// //   .query("SELECT id FROM department WHERE department_name = 'Sales'")
+// //   .then(([rows]) => {
+// //     console.log(rows[0].id);
+// //   });
+
