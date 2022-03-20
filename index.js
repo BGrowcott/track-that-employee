@@ -107,31 +107,32 @@ function addEmployee() {
 }
 
 async function updateEmployee() {
-  inquirer.prompt([
-    {
-      type: "list",
-      name: "updatedEmployee",
-      message: "Which Employee do you wish to update:",
-      choices: await makeEmployeeArray(),
-    },
-    {
-      type: "list",
-      name: "newRole",
-      message: "What is the employee's new role:",
-      choices: makeRoleArray(),
-    },
-  ])
-  .then(newRole)
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "updatedEmployee",
+        message: "Which Employee do you wish to update:",
+        choices: await makeEmployeeArray(),
+      },
+      {
+        type: "list",
+        name: "newRole",
+        message: "What is the employee's new role:",
+        choices: makeRoleArray(),
+      },
+    ])
+    .then(newRole);
 }
 
 function processRequest(answers) {
   const answer = answers.mainOptions;
   if (answer === "View all departments") {
-    showTable("department");
+    showTable();
   } else if (answer === "View all roles") {
-    showTable("job_role");
+    showJobRoles();
   } else if (answer === "View all employees") {
-    showTable("employee");
+    showEmployees();
   } else if (answer === "Add a department") {
     addDepartment();
   } else if (answer === "Add a role") {
@@ -152,11 +153,50 @@ const startPrompts = () => {
 startPrompts();
 
 // DATABASE QUERIES
-function showTable(table) {
-  db.query(`SELECT * FROM ${table}`, function (err, results) {
-    console.table(`\n${table.toUpperCase()} Table:`, results);
+function showTable() {
+  db.query(`SELECT * FROM department`, function (err, results) {
+    console.table(`\nDepartments Table:`, results);
     startPrompts();
   });
+}
+
+// show job roles
+
+function showJobRoles() {
+  db.query(
+    `SELECT job_role.id, 
+            title, 
+            salary, 
+            department.department_name
+     FROM job_role 
+     LEFT JOIN department ON job_role.department_id = department.id`,
+    function (err, results) {
+      console.table(`\nJob Roles Table:`, results);
+      startPrompts();
+    }
+  );
+}
+
+// show employees
+
+function showEmployees() {
+  db.query(
+    `SELECT e1.id, 
+            e1.first_name, 
+            e1.last_name, 
+            job_role.title, 
+            job_role.salary, 
+            department.department_name,
+    CONCAT(e2.first_name, ' ', e2.last_name) AS manager
+    FROM employee e1
+    LEFT JOIN job_role ON e1.role_id = job_role.id
+    LEFT JOIN department ON job_role.department_id = department.id
+    LEFT JOIN employee e2 ON e1.manager_id = e2.id;`,
+    function (err, results) {
+      console.table(`\nEmployees Table:`, results);
+      startPrompts();
+    }
+  );
 }
 
 // adds a new department
@@ -180,7 +220,7 @@ async function updateRoleTable(answer) {
       `INSERT INTO job_role (title, salary, department_id)
     VALUES ("${roleName}", "${salary}", "${id}")`,
       function (err, results) {
-        console.log(roleName + " added!");
+        console.log(chalk.greenBright(roleName + " added!"));
         startPrompts();
       }
     );
@@ -251,7 +291,7 @@ function updateEmployeeTable(answer) {
       manager.split(":")[1]
     }")`,
     function (err, results) {
-      console.log(`${firstName} ${lastName} added!`);
+      console.log(chalk.greenBright(`${firstName} ${lastName} added!`));
       startPrompts();
     }
   );
@@ -260,12 +300,14 @@ function updateEmployeeTable(answer) {
 // update an existing employee
 
 function newRole(answer) {
-  console.log(answer)
-  const { updatedEmployee, newRole }= answer;
+  console.log(answer);
+  const { updatedEmployee, newRole } = answer;
   db.query(
-    `UPDATE employee SET role_id = ${newRole.split(':')[1]} WHERE id = ${updatedEmployee.split(':')[1]}`,
+    `UPDATE employee SET role_id = ${newRole.split(":")[1]} WHERE id = ${
+      updatedEmployee.split(":")[1]
+    }`,
     function (err, results) {
-      console.log(updatedEmployee + " updated!");
+      console.log(chalk.greenBright(updatedEmployee + " updated!"));
       startPrompts();
     }
   );
