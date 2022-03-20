@@ -31,7 +31,7 @@ const openingQuestion = () => {
         "Add a role",
         "Add an employee",
         "Update an employee role",
-        "Exit"
+        "Exit",
       ],
       message: "What do you want to do?",
     },
@@ -75,34 +75,53 @@ function addRole() {
     .then(updateRoleTable);
 }
 
-// add an employee
+// add an employee prompt
 
 function addEmployee() {
+  inquirer
+    .prompt([
+      {
+        type: "input",
+        name: "firstName",
+        message: "Enter the employee's first name:",
+      },
+      {
+        type: "input",
+        name: "lastName",
+        message: "Enter the employee's last name:",
+      },
+      {
+        type: "list",
+        name: "role",
+        message: "What is the employee's role:",
+        choices: makeRoleArray(),
+      },
+      {
+        type: "list",
+        name: "manager",
+        message: "Who is the employee's manager:",
+        choices: makeManagerArray(),
+      },
+    ])
+    .then(updateEmployeeTable);
+}
+
+async function updateEmployee() {
   inquirer.prompt([
     {
-      type: "input",
-      name: "firstName",
-      message: "Enter the employee's first name:",
-    },
-    {
-      type: "input",
-      name: "lastName",
-      message: "Enter the employee's last name:",
+      type: "list",
+      name: "updatedEmployee",
+      message: "Which Employee do you wish to update:",
+      choices: await makeEmployeeArray(),
     },
     {
       type: "list",
-      name: "role",
-      message: "What is the employee's role:",
+      name: "newRole",
+      message: "What is the employee's new role:",
       choices: makeRoleArray(),
     },
-    {
-      type: "list",
-      name: "manager",
-      message: "Who is the employee's manager:",
-      choices: makeManagerArray(),
-    },
   ])
-  .then(updateEmployeeTable)
+  .then(newRole)
 }
 
 function processRequest(answers) {
@@ -119,7 +138,9 @@ function processRequest(answers) {
     addRole();
   } else if (answer === "Add an employee") {
     addEmployee();
-  } else process.exit()
+  } else if (answer === "Update an employee role") {
+    updateEmployee();
+  } else process.exit();
 }
 
 const startPrompts = () => {
@@ -196,7 +217,9 @@ function idFromDepName(department) {
 function makeRoleArray() {
   const roleArray = [];
   db.query(`SELECT id, title FROM job_role`, function (err, results) {
-    results.forEach((job_role) => roleArray.push(`${job_role.title} - ID:${job_role.id}`));
+    results.forEach((job_role) =>
+      roleArray.push(`${job_role.title} - ID:${job_role.id}`)
+    );
   });
   return roleArray;
 }
@@ -220,11 +243,13 @@ function makeManagerArray() {
 
 // adds the new employee to the table
 
-async function updateEmployeeTable(answer) {
+function updateEmployeeTable(answer) {
   const { firstName, lastName, role, manager } = answer;
   db.query(
     `INSERT INTO employee (first_name, last_name, role_id, manager_id)
-    VALUES ("${firstName}", "${lastName}", "${role.split(':')[1]}", "${manager.split(":")[1]}")`,
+    VALUES ("${firstName}", "${lastName}", "${role.split(":")[1]}", "${
+      manager.split(":")[1]
+    }")`,
     function (err, results) {
       console.log(`${firstName} ${lastName} added!`);
       startPrompts();
@@ -232,3 +257,35 @@ async function updateEmployeeTable(answer) {
   );
 }
 
+// update an existing employee
+
+function newRole(answer) {
+  console.log(answer)
+  const { updatedEmployee, newRole }= answer;
+  db.query(
+    `UPDATE employee SET role_id = ${newRole.split(':')[1]} WHERE id = ${updatedEmployee.split(':')[1]}`,
+    function (err, results) {
+      console.log(updatedEmployee + " updated!");
+      startPrompts();
+    }
+  );
+}
+
+// make employee array
+
+function makeEmployeeArray() {
+  const employeeArray = [];
+  return new Promise((resolve, reject) => {
+    db.query(
+      `SELECT id, first_name, last_name FROM employee`,
+      function (err, results) {
+        results.forEach((employee) =>
+          employeeArray.push(
+            `${employee.first_name} ${employee.last_name} - ID:${employee.id}`
+          )
+        );
+        resolve(employeeArray);
+      }
+    );
+  });
+}
