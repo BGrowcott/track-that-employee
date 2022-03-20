@@ -19,6 +19,8 @@
   "homepage": "https://github.com/BGrowcott/track-that-employee#readme",
   "dependencies": {
     "console.table": "^0.10.0",
+    "figlet": "^1.5.2",
+    "figlet-promises": "^1.0.1",
     "inquirer": "^8.2.1",
     "mysql2": "^2.3.3"
   },

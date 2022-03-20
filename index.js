@@ -1,10 +1,17 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const chalk = require("chalk");
-const fs = require("fs");
-const path = require("path");
 const cTable = require("console.table");
-const { resolve } = require("path");
+const figlet = require("figlet-promises");
+const Figlet = new figlet();
+
+let font = "small";
+
+async function intro() {
+  await Figlet.loadFonts();
+  let txt = await Figlet.write("Track That Employee!", font);
+  console.log(chalk.greenBright(txt));
+}
 
 // connecting to the database
 const db = mysql.createConnection(
@@ -14,7 +21,6 @@ const db = mysql.createConnection(
     password: "password",
     database: "employees_db",
   },
-  console.log(`Connected to the employees_db database.`)
 );
 
 // Prompts
@@ -150,7 +156,7 @@ const startPrompts = () => {
     .catch((err) => console.error(err));
 };
 
-startPrompts();
+intro().then(startPrompts);
 
 // DATABASE QUERIES
 function showTable() {
@@ -206,7 +212,7 @@ function updateDepartmentTable(answer) {
     `INSERT INTO department (department_name)
     VALUES ("${newDepartment}")`,
     function (err, results) {
-      console.log(newDepartment + " added!");
+      console.log(chalk.greenBright(newDepartment + " added!"));
       startPrompts();
     }
   );
@@ -300,7 +306,6 @@ function updateEmployeeTable(answer) {
 // update an existing employee
 
 function newRole(answer) {
-  console.log(answer);
   const { updatedEmployee, newRole } = answer;
   db.query(
     `UPDATE employee SET role_id = ${newRole.split(":")[1]} WHERE id = ${
